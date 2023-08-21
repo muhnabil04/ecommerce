@@ -1,0 +1,79 @@
+/* font */
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200;0,300;0,400;0,700;0,800;1,400;1,500&display=swap");
+
+/* color set up */
+:root {
+    --primary: #3155e7;
+    --primary-dark: #2045d6;
+    --black: #010101;
+    --gray-1: #788190;
+    --gray-2: #d3d4db;
+    --white: #ffff;
+    --body: #fefefe;
+}
+
+.body {
+    font-family: "Plus Jakarta sans", sans-serif;
+    background-color: var(--body);
+}
+
+/* button */
+.btn {
+    border-radius: 8px;
+}
+
+.btn-primary,
+.btn-outline-secondary {
+    padding: 12px 20px;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-outline-secondary {
+    border: 1px solid var(--gray-2);
+    color: var(--black);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--gray-2);
+    border: 1px solid var(--gray-2);
+    color: var(--black);
+}
+
+.btn-outline-secondary:focus {
+    background-color: var(--gray-2);
+    border: 1px solid var(--gray-2);
+    color: var(--black);
+}
+
+/* navbar */
+.navbar.btn-outline-secondary {
+    border: 1px solid var(--gray-2);
+    color: var(--black);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    padding: 10px 16px;
+}
+
+.navbar {
+    padding: 20px 0;
+}
+
+.nav-link {
+    margin-left: 41px;
+    font-size: 16px;
+    color: var(--gray-1);
+    font-weight: bold;
+}
+
+.navbar.navbar-light {
+    background-color: #f0f0f0 !important;
+    padding: 20px 0;
+}
