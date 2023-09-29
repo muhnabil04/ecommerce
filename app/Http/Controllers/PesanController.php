@@ -9,8 +9,10 @@ use App\Models\PesananDetail;
 use GuzzleHttp\RedirectMiddleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\database\Eloquent\Model;
 use App\Models\User;
+use App\Exports\RiwayatExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PesanController extends Controller
 {
@@ -54,13 +56,13 @@ class PesanController extends Controller
             $pesanan_baru = $cek_pesanan;
         }
 
-        $cek_pesanan_detail = PesananDetail::where('barang_id', $produk->id)
+        $cek_pesanan_detail = PesananDetail::where('produk_id', $produk->id)
             ->where('pesanan_id', $pesanan_baru->id)
             ->first();
 
         if (empty($cek_pesanan_detail)) {
             $pesanan_detail = new PesananDetail;
-            $pesanan_detail->barang_id = $produk->id;
+            $pesanan_detail->produk_id = $produk->id;
             $pesanan_detail->pesanan_id = $pesanan_baru->id;
             $pesanan_detail->jumlah = $request->jumlah_pesan;
             $pesanan_detail->jumlah_harga = $produk->harga * $request->jumlah_pesan;
@@ -77,7 +79,6 @@ class PesanController extends Controller
 
         return redirect('pesan/' . $id)->with('success', 'pesanan anda sudah ada di keranjang');
     }
-
 
     public function check_out()
     {
@@ -133,7 +134,7 @@ class PesanController extends Controller
         }
 
         foreach ($pesanan_details as $pesanan_detail) {
-            $barang = Produk::findOrFail($pesanan_detail->barang_id);
+            $barang = Produk::findOrFail($pesanan_detail->produk_id);
             $barang->stok -= $pesanan_detail->jumlah;
             $barang->save();
         }
@@ -142,8 +143,45 @@ class PesanController extends Controller
         $user->save();
 
         $pesanan->status = 1;
-        $pesanan->update();
+        $pesanan->save();
 
         return redirect('dashboard')->with('success', 'Checkout berhasil. Kirim alamatmu ke admin, WhatsApp: 0812345678');
+    }
+
+    public function riwayat()
+    {
+        $pesanan = Pesanan::where('user_id', Auth::user()->id)
+            ->where('status', 1)
+            ->with(['pesanan_detail.produk'])
+            ->paginate(10);
+
+        return view('riwayat', [
+            'pesanan' => $pesanan,
+            'title' => 'Riwayat Pesanan'
+        ]);
+    }
+
+    public function downloadRiwayatExcel()
+    {
+        $data = [];
+
+        $pesanan = Pesanan::where('user_id', Auth::user()->id)
+            ->where('status', 1)
+            ->with(['pesanan_detail.produk'])
+            ->get();
+
+        foreach ($pesanan as $pesan) {
+            foreach ($pesan->pesanan_detail as $detail) {
+                $data[] = [
+                    'produk_nama' => $detail->produk->nama,
+                    'produk_harga' => $detail->produk->harga,
+                    'jumlah' => $detail->jumlah,
+                    'jumlah_harga' => $detail->jumlah_harga,
+                    'created_at' => $detail->created_at,
+                ];
+            }
+        }
+
+        return Excel::download(new RiwayatExport($data), 'riwayat_pesanan.xlsx');
     }
 }
