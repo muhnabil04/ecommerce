@@ -1,7 +1,7 @@
-@extends('layout.main')
+@extends('admin.layout.navbar')
 {{-- navbar --}}
 @section('container')
-    <h1 class="text-center mb-5 mt-3">Halaman Admin</h1>
+    <h1 class="text-center mb-5 mt-3">Halaman {{ $title }}</h1>
     <a href="{{ route('admin.create') }}" class="btn btn-primary mb-3">Tambah Data</a>
     <table class="table table-bordered mt-5">
 

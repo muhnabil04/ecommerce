@@ -1,4 +1,4 @@
-@extends('layout.main')
+@extends('admin.layout.navbar')
 
 @section('container')
     <form method="POST" action="{{ route('admin.store') }}" enctype="multipart/form-data">

@@ -12,7 +12,7 @@ class PesananDetail extends Model
 
     public function produk()
     {
-        return $this->belongsTo('App\Models\produk', 'barang_id', 'id');
+        return $this->belongsTo('App\Models\produk', 'produk_id', 'id');
     }
 
     public function pesanan()

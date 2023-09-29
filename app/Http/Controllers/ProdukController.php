@@ -18,9 +18,9 @@ class ProdukController extends Controller
     {
 
         $dataProduk = produk::paginate(6);
-        return view('admin.home')->with([
+        return view('admin.produk.home')->with([
             'produk' => $dataProduk,
-            'title' => 'admin'
+            'title' => 'data produk'
         ]);
     }
 
@@ -30,7 +30,7 @@ class ProdukController extends Controller
      */
     public function create()
     {
-        return view('admin.create')->with([
+        return view('admin.produk.create')->with([
             'title' => 'create',
         ]);
     }
@@ -84,7 +84,7 @@ class ProdukController extends Controller
      */
     public function edit(string $id)
     {
-        return view('admin.edit')->with([
+        return view('admin.produk.edit')->with([
             'produk' => produk::find($id),
             'title' => 'update',
         ]);
@@ -100,6 +100,7 @@ class ProdukController extends Controller
             'kategori' => 'required',
             'deskripsi' => 'required',
             'harga' => 'required',
+            'stok' => 'required',
             // 'foto' => 'image',
         ]);
 
@@ -108,6 +109,7 @@ class ProdukController extends Controller
         $produk->kategori = $request->kategori;
         $produk->deskripsi = $request->deskripsi;
         $produk->harga = $request->harga;
+        $produk->stok = $request->stok;
 
         if ($request->hasFile('foto')) {
 
@@ -173,12 +175,25 @@ class ProdukController extends Controller
         ]);
     }
 
-    public function gues()
+    public function gues(Request $request)
     {
-        $dataProduk = produk::paginate(6);
+        $dataProduk = Produk::paginate(6);
+
+        if ($request->wantsJson()) {
+            return response()->json(['produk' => $dataProduk]);
+        }
+
         return view('user.gues')->with([
             'produk' => $dataProduk,
             'title' => 'gues'
+        ]);
+    }
+
+
+    public function adminIndex()
+    {
+        return view('admin.index')->with([
+            'title' => 'dashboard admin'
         ]);
     }
 }

@@ -1,5 +1,5 @@
 @extends('layout.main')
-{{-- navbar --}}
+
 @section('container')
     <div class="container">
         <div class="row">
@@ -14,78 +14,96 @@
                         @endif
 
                         @if (Session::has('success'))
-                            <div class="alert alert-danger" role="alert">
+                            <div class="alert alert-success" role="alert">
                                 {{ Session::get('success') }}
                             </div>
                         @endif
-
                     </div>
 
                     <div class="card-body">
                         @if (!empty($pesanan))
                             <div class="row">
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>no</th>
-                                            <th>nama produk</th>
-                                            <th>jumlah produk</th>
-                                            <th>harga</th>
-                                            <th>total harga</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    @php
-                                        $nomor = 1;
-                                    @endphp
-                                    @foreach ($pesanan_details as $pesanan_detail)
+                                <form action="{{ url('konfirmasi-checkout') }}" method="post">
+                                    @csrf
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>no</th>
+                                                <th>nama produk</th>
+                                                <th>jumlah produk</th>
+                                                <th>harga</th>
+                                                <th>total harga</th>
+                                                <th>aksi</th>
+                                                <th>check box</th>
+                                            </tr>
+                                        </thead>
                                         <tbody>
-                                            <td>{{ $nomor++ }}</td>
-                                            <td>
-                                                {{ $pesanan_detail->produk->nama }}
-                                            </td>
-                                            <td>{{ $pesanan_detail->jumlah }}</td>
-                                            <td>Rp. {{ $pesanan_detail->produk->harga }}</td>
-                                            <td>Rp. {{ number_format($pesanan_detail->jumlah_harga) }}</td>
-                                            <td>
-                                                <form action="{{ url('check-out') }}/{{ $pesanan_detail->id }}"
-                                                    method="POST">
-                                                    @csrf
-                                                    {{ method_field('DELETE') }}
-                                                    <button type="submit" class="btn btn-danger"><i
-                                                            class="fa fa-trash"></i></button>
-                                                </form>
-                                            </td>
-                                    @endforeach
-                                    <tr>
-                                        <td colspan="4" align="right">Total Harga:</td>
-                                        <td>Rp. {{ number_format($pesanan->jumlah_harga) }}</td>
-                                        <td>
-                                            <form action="{{ url('konfirmasi-checkout') }}" method="post">
-                                                @csrf
+                                            @php
+                                                $nomor = 1;
+                                            @endphp
+                                            @foreach ($pesanan as $item)
+                                                <tr>
+                                                    <td>{{ $nomor++ }}</td>
+                                                    <td>{{ $item->produk->nama }}</td>
+                                                    <td>{{ $item->jumlah }}</td>
+                                                    <td class="harga-cell">Rp. {{ $item->produk->harga }}</td>
+                                                    <td>Rp. {{ number_format($item->jumlah_harga) }}</td>
+                                                    <td>
 
-                                                <input type="hidden" name="jumlah_harga"
-                                                    value="{{ $pesanan->jumlah_harga }}">
+                                                        <a href="{{ url('check-out/' . $item->id) }}"
+                                                            class="btn btn-danger">hapus</a>
 
-                                                <button type="submit" class="btn btn-success">
-                                                    <i class="fa fa-shopping-cart">checkout</i>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                    </tbody>
-
-
-                                </table>
-                            @else
-                                <p class="text-center">keranjang kosong</p>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" class="item-checkbox"
+                                                            data-price="{{ $item->jumlah_harga }}" name="selected_items[]"
+                                                            value="{{ $item->id }}">
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                            <tr>
+                                                <td colspan="5" align="right">Total Harga:</td>
+                                                <td>Rp. <span id="total-harga">0.00</span></td>
+                                                <td>
+                                                    <input type="hidden" name="jumlah_harga" id="hidden-total-harga"
+                                                        value="0">
+                                                    <button type="submit" class="btn btn-success">
+                                                        <i class="fa fa-shopping-cart"></i> checkout
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </form>
+                            </div>
+                        @else
+                            <p class="text-center">Keranjang kosong</p>
                         @endif
                     </div>
                 </div>
-
-
             </div>
         </div>
     </div>
-    </div>
+
+    <script>
+        const checkboxes = document.querySelectorAll('.item-checkbox');
+        const totalHargaElement = document.getElementById('total-harga');
+        const hiddenTotalHargaElement = document.getElementById('hidden-total-harga');
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                let totalHarga = 0;
+
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        const itemPrice = parseFloat(checkbox.getAttribute('data-price'));
+                        totalHarga += itemPrice;
+                    }
+                });
+
+                totalHargaElement.textContent = `Rp. ${totalHarga.toFixed(2)}`;
+                hiddenTotalHargaElement.value = totalHarga.toFixed(2);
+            });
+        });
+    </script>
 @endsection

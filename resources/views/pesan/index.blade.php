@@ -58,6 +58,13 @@
                                                 <form action="{{ url('pesan', $produk->id) }}" method="POST">
                                                     @csrf
                                                     <input type="number" name="jumlah_pesan" class="form-control" required>
+
+                                                    <div class="form-group mt-3">
+                                                        <label for="coupon">Coupon Code:</label>
+                                                        <input type="text" id="coupon" name="coupon_code"
+                                                            class="form-control">
+                                                    </div>
+
                                                     <button type="submit" class="btn btn-primary mt-4">
                                                         <i class="fa fa-shopping-cart"></i> masukan keranjang
                                                     </button>

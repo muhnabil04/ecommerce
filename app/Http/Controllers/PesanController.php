@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\models\produk;
 use Illuminate\Http\Request;
 use App\Models\Pesanan;
+use App\Models\Coupon;
 use App\Models\PesananDetail;
 use GuzzleHttp\RedirectMiddleware;
 use Illuminate\Support\Facades\Auth;
@@ -34,69 +35,75 @@ class PesanController extends Controller
 
     public function pesan(Request $request, $id)
     {
-        $produk = Produk::where('id', $id)->first();
+        $produk = Produk::findOrFail($id);
+        $user = Auth::user();
         $tanggal = Carbon::now();
 
         if ($request->jumlah_pesan > $produk->stok) {
-            return redirect('pesan/' . $id)->with('error', 'stok tidak cukup');
+            return redirect('pesan/' . $id)->with('error', 'Stok tidak cukup');
         }
 
-        $cek_pesanan = Pesanan::where('user_id', Auth::user()->id)->where('status', 0)->first();
+        $couponCode = $request->input('coupon_code');
+        $couponDiscount = 0;
 
-        if (empty($cek_pesanan)) {
-            $pesanan = new Pesanan;
-            $pesanan->user_id = Auth::user()->id;
-            $pesanan->tanggal = $tanggal;
-            $pesanan->status = 0;
-            $pesanan->jumlah_harga = 0;
-            $pesanan->save();
+        $coupon = Coupon::where('kode', $couponCode)->first();
 
-            $pesanan_baru = $pesanan;
-        } else {
-            $pesanan_baru = $cek_pesanan;
+        if ($coupon) {
+            $couponDiscount = $coupon->diskon;
         }
 
-        $cek_pesanan_detail = PesananDetail::where('produk_id', $produk->id)
-            ->where('pesanan_id', $pesanan_baru->id)
+
+        $jumlahPesan = $request->jumlah_pesan;
+
+        $hargaSetelahDiskon = $produk->harga * (1 - ($couponDiscount / 100));
+
+        $cek_pesanan = Pesanan::where('user_id', $user->id)
+            ->where('produk_id', $produk->id)
+            ->where('status', 0)
             ->first();
 
-        if (empty($cek_pesanan_detail)) {
-            $pesanan_detail = new PesananDetail;
-            $pesanan_detail->produk_id = $produk->id;
-            $pesanan_detail->pesanan_id = $pesanan_baru->id;
-            $pesanan_detail->jumlah = $request->jumlah_pesan;
-            $pesanan_detail->jumlah_harga = $produk->harga * $request->jumlah_pesan;
-            $pesanan_detail->save();
+        if (!$cek_pesanan) {
+            $pesanan = new Pesanan;
+            $pesanan->produk_id = $produk->id;
+            $pesanan->user_id = $user->id;
+            $pesanan->tanggal = $tanggal;
+            $pesanan->jumlah = $jumlahPesan;
+            $pesanan->status = 0;
+            $pesanan->jumlah_harga = $hargaSetelahDiskon * $jumlahPesan;
+            $pesanan->save();
+
+            return redirect('pesan/' . $id)->with('success', 'Pesanan anda sudah ada di keranjang');
         } else {
-            $pesanan_detail = $cek_pesanan_detail;
-            $pesanan_detail->jumlah = $pesanan_detail->jumlah + $request->jumlah_pesan;
-            $pesanan_detail->jumlah_harga = $produk->harga * $pesanan_detail->jumlah;
-            $pesanan_detail->update();
+            $cek_pesanan->jumlah_harga += $hargaSetelahDiskon * $jumlahPesan;
+            $cek_pesanan->jumlah += $jumlahPesan;
+            $cek_pesanan->update();
+
+            return redirect('pesan/' . $id)->with('success', 'Code coupon telah digunakan. Anda mendapat potongan harga ' . $couponDiscount . '%');
         }
-
-        $pesanan_baru->jumlah_harga = $pesanan_baru->jumlah_harga + $produk->harga * $request->jumlah_pesan;
-        $pesanan_baru->update();
-
-        return redirect('pesan/' . $id)->with('success', 'pesanan anda sudah ada di keranjang');
     }
+
+
+
+
+
+
 
     public function check_out()
     {
-        $pesanan = Pesanan::where('user_id', Auth::user()->id)->where('status', 0)->first();
+        $pesanan = Pesanan::where('user_id', Auth::user()->id)->where('status', 0)->get();
 
-        // Initialize an empty array to store pesanan_details if pesanan is not empty
-        $pesanan_details = [];
 
-        if (!empty($pesanan)) {
-            $pesanan_details = PesananDetail::where('pesanan_id', $pesanan->id)
-                ->with('produk')
-                ->get();
+        $totalHarga = 0;
+
+        foreach ($pesanan as $item) {
+            $totalHarga +=  $item['jumlah_harga'];
         }
 
+        // dd($totalHarga);  
         return view('pesan.check_out', [
             'title' => 'Keranjang',
             'pesanan' => $pesanan,
-            'pesanan_details' => $pesanan_details,
+            'totalHarga' => $totalHarga,
         ]);
     }
 
@@ -106,13 +113,15 @@ class PesanController extends Controller
 
     public function delete($id)
     {
-        $pesanan_detail = PesananDetail::where('id', $id)->first();
+        $pesanan_detail = Pesanan::findOrFail($id);
 
-        $pesanan = Pesanan::where('id', $pesanan_detail->pesanan_id)->first();
 
-        $pesanan->jumlah_harga = $pesanan->jumlah_harga - $pesanan_detail->jumlah_harga;
 
-        $pesanan->update();
+        // $pesanan = Pesanan::where('id', $pesanan_detail->pesanan_id)->first();
+
+        // $pesanan->jumlah_harga = $pesanan->jumlah_harga - $pesanan_detail->jumlah_harga;
+
+        // $pesanan->update();
 
         $pesanan_detail->delete();
 
@@ -122,37 +131,62 @@ class PesanController extends Controller
     public function konfirmasi(Request $request)
     {
         $user = Auth::user();
-        $pesanan = Pesanan::where('user_id', $user->id)->where('status', 0)->first();
+        $selectedItems = $request->input('selected_items', []);
 
-        $totalHarga = $pesanan->jumlah_harga;
-        $pesanan_id = $pesanan->id;
+        if (empty($selectedItems)) {
+            return redirect('check-out')->with('error', 'Pilih salah satu produk');
+        }
 
-        $pesanan_details = PesananDetail::where('pesanan_id', $pesanan_id)->get();
+        $pesanan = Pesanan::where('user_id', $user->id)
+            ->whereIn('id', $selectedItems)
+            ->where('status', 0)
+            ->get();
+
+        if ($pesanan->isEmpty()) {
+            return redirect('check-out')->with('error', 'Kosong');
+        }
+
+        $totalHarga = 0;
+
+        foreach ($pesanan as $item) {
+            $totalHarga += $item->jumlah_harga;
+        }
 
         if ($user->saldo < $totalHarga) {
             return redirect('check-out')->with('error', 'Gagal, saldo Anda kurang. Hubungi admin untuk isi saldo, WhatsApp: 081234567');
         }
 
-        foreach ($pesanan_details as $pesanan_detail) {
-            $barang = Produk::findOrFail($pesanan_detail->produk_id);
-            $barang->stok -= $pesanan_detail->jumlah;
+        foreach ($pesanan as $item) {
+            $barang = $item->produk;
+            if ($barang->stok < $item->jumlah) {
+                return redirect('check-out')->with('error', 'Gagal, stok produk ' . $barang->nama . ' tidak mencukupi.');
+            }
+
+            $barang->stok -= $item->jumlah;
             $barang->save();
+
+            $item->status = 1;
+            $item->save();
         }
 
         $user->saldo -= $totalHarga;
         $user->save();
 
-        $pesanan->status = 1;
-        $pesanan->save();
-
         return redirect('dashboard')->with('success', 'Checkout berhasil. Kirim alamatmu ke admin, WhatsApp: 0812345678');
     }
+
+
+
+
+
+
+
 
     public function riwayat()
     {
         $pesanan = Pesanan::where('user_id', Auth::user()->id)
             ->where('status', 1)
-            ->with(['pesanan_detail.produk'])
+            ->with('produk')
             ->paginate(10);
 
         return view('riwayat', [
@@ -167,19 +201,18 @@ class PesanController extends Controller
 
         $pesanan = Pesanan::where('user_id', Auth::user()->id)
             ->where('status', 1)
-            ->with(['pesanan_detail.produk'])
+            ->with(['produk'])
             ->get();
 
-        foreach ($pesanan as $pesan) {
-            foreach ($pesan->pesanan_detail as $detail) {
-                $data[] = [
-                    'produk_nama' => $detail->produk->nama,
-                    'produk_harga' => $detail->produk->harga,
-                    'jumlah' => $detail->jumlah,
-                    'jumlah_harga' => $detail->jumlah_harga,
-                    'created_at' => $detail->created_at,
-                ];
-            }
+        foreach ($pesanan as $item) {
+
+            $data[] = [
+                'produk_nama' => $item->produk->nama,
+                'produk_harga' => $item->produk->harga,
+                'jumlah' => $item->jumlah,
+                'jumlah_harga' => $item->jumlah_harga,
+                'created_at' => $item->created_at,
+            ];
         }
 
         return Excel::download(new RiwayatExport($data), 'riwayat_pesanan.xlsx');

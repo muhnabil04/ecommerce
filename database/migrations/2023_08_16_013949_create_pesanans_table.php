@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('pesanans', function (Blueprint $table) {
             $table->id();
             $table->integer('user_id');
+            $table->integer('produk_id');
+            $table->integer('jumlah');
             $table->date('tanggal');
             $table->string('status');
             $table->integer('jumlah_harga');

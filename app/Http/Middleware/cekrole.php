@@ -18,6 +18,6 @@ class cekrole
         if (in_array($request->user()->role_id, $role)) {
             return $next($request);
         }
-        return redirect('/');
+        return redirect('/admin');
     }
 }

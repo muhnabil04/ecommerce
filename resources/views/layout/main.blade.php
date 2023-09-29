@@ -34,21 +34,20 @@
                         <a class="nav-link {{ $title === 'produk' ? 'active' : '' }}" href="/produk">produk</a>
 
                         @php
-                            $pesanan_utama = \App\Models\Pesanan::where('user_id', Auth::user()->id)
+                            // Count the total notification count for main orders with status 0 (cart)
+                            $totalNotif = \App\Models\Pesanan::where('user_id', Auth::user()->id)
                                 ->where('status', 0)
-                                ->first();
-                            
-                            $notif = 0;
-                            if ($pesanan_utama) {
-                                $notif = \App\Models\PesananDetail::where('pesanan_id', $pesanan_utama->id)->count();
-                            }
+                                ->with('details') // Assuming there's a relation named 'details'
+                                ->count();
                         @endphp
+
+
 
                         <a class="nav-link me-3 {{ $title === 'keranjang' ? 'active' : '' }}"
                             href="{{ url('check-out') }}">
                             <i class="fa fa-shopping-cart"></i>
-                            @if ($notif > 0)
-                                <span class="badge bg-danger text-white">{{ $notif }}</span>
+                            @if ($totalNotif > 0)
+                                <span class="badge bg-danger text-white">{{ $totalNotif }}</span>
                             @endif
                         </a>
 
@@ -61,18 +60,20 @@
                                 <li class="mb-1"> nama: {{ Auth::user()->name }}</li>
                                 <li>saldo: Rp {{ number_format(Auth::user()->saldo) }} </a></li>
                                 <li class="mt-1`">
+                                <li><a href="/riwayat"
+                                        class="btn btn-outline-secondary shadow-sm d-sm d-block">riwayat</a></li>
 
-                                    <a href="{{ route('logout') }}"
-                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-                                        class="btn btn-outline-secondary shadow-sm d-sm d-block">
-                                        Logout
-                                    </a>
-                                @else
-                                    <a href="{{ route('login') }}"
-                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-                                        class="btn btn-outline-secondary shadow-sm d-sm d-block">
-                                        Login
-                                    </a>
+                                <a href="{{ route('logout') }}"
+                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                                    class="btn btn-outline-secondary shadow-sm d-sm d-block">
+                                    Logout
+                                </a>
+                            @else
+                                <a href="{{ route('login') }}"
+                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                                    class="btn btn-outline-secondary shadow-sm d-sm d-block">
+                                    Login
+                                </a>
             @endif
             </li>
             </ul>
