@@ -27,9 +27,11 @@ class PesanController extends Controller
 
         $produk = produk::where('id', $id)->first();
 
+        $produks = produk::all();
         return view('pesan.index', [
             'title' => 'pesan', // Here was the syntax error
             'produk' => $produk,
+            'produks' => $produks,
         ]);
     }
 
@@ -46,12 +48,13 @@ class PesanController extends Controller
         $couponCode = $request->input('coupon_code');
         $couponDiscount = 0;
 
-        $coupon = Coupon::where('kode', $couponCode)->first();
+        if ($couponCode) {
+            $coupon = Coupon::where('kode', $couponCode)->first();
 
-        if ($coupon) {
-            $couponDiscount = $coupon->diskon;
+            if ($coupon) {
+                $couponDiscount = $coupon->diskon;
+            }
         }
-
 
         $jumlahPesan = $request->jumlah_pesan;
 
@@ -78,9 +81,14 @@ class PesanController extends Controller
             $cek_pesanan->jumlah += $jumlahPesan;
             $cek_pesanan->update();
 
-            return redirect('pesan/' . $id)->with('success', 'Code coupon telah digunakan. Anda mendapat potongan harga ' . $couponDiscount . '%');
+            if ($couponCode) {
+                return redirect('pesan/' . $id)->with('success', 'Code coupon telah digunakan. Anda mendapat potongan harga ' . $couponDiscount . '%');
+            } else {
+                return redirect('pesan/' . $id)->with('success', 'Pesanan anda sudah ada di keranjang');
+            }
         }
     }
+
 
 
 
@@ -99,7 +107,6 @@ class PesanController extends Controller
             $totalHarga +=  $item['jumlah_harga'];
         }
 
-        // dd($totalHarga);  
         return view('pesan.check_out', [
             'title' => 'Keranjang',
             'pesanan' => $pesanan,

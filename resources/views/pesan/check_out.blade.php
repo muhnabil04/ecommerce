@@ -4,7 +4,7 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12">
-                <div class="card">
+                <div class="card mt-5">
                     <div class="card-header">
                         <h3>checkout</h3>
                         @if (Session::has('error'))
@@ -22,7 +22,7 @@
 
                     <div class="card-body">
                         @if (!empty($pesanan))
-                            <div class="row">
+                            <div class="row mt-5">
                                 <form action="{{ url('konfirmasi-checkout') }}" method="post">
                                     @csrf
                                     <table class="table table-bordered">
@@ -84,6 +84,7 @@
             </div>
         </div>
     </div>
+
 
     <script>
         const checkboxes = document.querySelectorAll('.item-checkbox');

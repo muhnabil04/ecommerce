@@ -40,11 +40,17 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        'api' => [
+            'driver' => 'passport',
+            'provider' => 'users',
+        ],
     ],
 
     /*
     |--------------------------------------------------------------------------
     | User Providers
+    
     |--------------------------------------------------------------------------
     |
     | All authentication drivers have a user provider. This defines how the
@@ -111,5 +117,10 @@ return [
     */
 
     'password_timeout' => 10800,
+
+
+
+
+
 
 ];

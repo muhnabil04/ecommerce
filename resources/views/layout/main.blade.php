@@ -15,8 +15,36 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"
         integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
 
+    <link rel="stylesheet" type="text/css" href="{{ asset('css/style.css') }}">
+
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
+    <!-- Bootstrap icons-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet" />
+
+
+
     <title> {{ $title }} </title>
 </head>
+<style>
+    footer {
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 10px 0;
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+    }
+
+    .content {
+        /* min-height: calc(100vh - 60px);
+        /* Sesuaikan dengan tinggi navbar jika diperlukan */
+        /* padding-bottom: 60px; */
+        /* Sesuaikan dengan tinggi footer jika diperlukan */
+        position: relative;
+        */
+    }
+</style>
 
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -56,10 +84,9 @@
                                 data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa fa-user" aria-hidden="true"></i>
                             </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
                                 <li class="mb-1"> nama: {{ Auth::user()->name }}</li>
                                 <li>saldo: Rp {{ number_format(Auth::user()->saldo) }} </a></li>
-                                <li class="mt-1`">
                                 <li><a href="/riwayat"
                                         class="btn btn-outline-secondary shadow-sm d-sm d-block">riwayat</a></li>
 
@@ -69,27 +96,128 @@
                                     Logout
                                 </a>
                             @else
-                                <a href="{{ route('login') }}"
-                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-                                    class="btn btn-outline-secondary shadow-sm d-sm d-block">
-                                    Login
-                                </a>
-            @endif
-            </li>
-            </ul>
-        </div>
+                                <div class="navbar-nav ms-auto">
+                                    <a class="nav-link {{ $title === 'dashboard' ? 'active' : '' }}"
+                                        aria-current="page" href="/dashboard">Home</a>
+                                    <a class="nav-link {{ $title === 'produk' ? 'active' : '' }}"
+                                        href="/produk">produk</a>
 
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-            @csrf
-        </form>
+
+                                    <div class="dropdown">
+                                        <button class="btn btn-secondary dropdown-toggle" type="button"
+                                            id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fa fa-user" aria-hidden="true"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end"
+                                            aria-labelledby="dropdownMenuButton1">
+                                            <a href="{{ route('login') }}"
+                                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                                                class="btn btn-outline-secondary shadow-sm d-sm d-block">
+                                                Login
+                                            </a>
+                                        </ul>
+                                    </div>
+                                </div>
+
+            @endif
+
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
         </div>
         </div>
         </div>
     </nav>
+    {{-- @if (Auth::check())
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container px-4 px-lg-5">
+                <a class="navbar-brand" href="#!">BilShop</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation"><span
+                        class="navbar-toggler-icon"></span></button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                        <li class="nav-item"><a class="nav-link active" aria-current="page" href="#!">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#!">About</a></li>
 
-    <div class="container mt-4">
+                        <li><a class="nav-link" href="/produk">Produk</a></li>
+                    </ul>
+                    <form class="d-flex">
+                        <a href="{{ url('check-out') }}" class="btn btn-outline-dark" type="button">
+                            <i class="bi-cart-fill me-1"></i>
+                            Cart
+                            <span class="badge bg-dark text-white ms-1 rounded-pill">
+                                @php
+                                    $totalNotif = \App\Models\Pesanan::where('user_id', Auth::user()->id)
+                                        ->where('status', 0)
+                                        ->with('details')
+                                        ->count();
+                                @endphp
+                                {{ $totalNotif }}
+                            </span>
+                        </a>
+                    </form>
+                    <a href="{{ route('logout') }}" class="btn btn-outline-secondary shadow-sm d-sm d-block">Logout</a>
+                </div>
+            </div>
+        </nav>
+    @else
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container px-4 px-lg-5">
+                <a class="navbar-brand" href="#!">BilShop</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation"><span
+                        class="navbar-toggler-icon"></span></button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                        <li class="nav-item"><a class="nav-link active" aria-current="page" href="#!">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#!">About</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">Shop</a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="#!">All Products</a></li>
+                                <li>
+                                    <hr class="dropdown-divider" />
+                                </li>
+                                <li><a class="dropdown-item" href="#!">Popular Items</a></li>
+                                <li><a class="dropdown-item" href="#!">New Arrivals</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <form class="d-flex">
+                        <button class="btn btn-outline-dark" type="submit">
+                            <i class="bi-cart-fill me-1"></i>
+                            Cart
+                            <span class="badge bg-dark text-white ms-1 rounded-pill">0</span>
+                        </button>
+                    </form>
+
+                    <a href="{{ route('login') }}" class="btn btn-outline-secondary shadow-sm d-sm d-block">Login</a>
+                </div>
+            </div>
+        </nav>
+    @endif --}}
+
+
+    {{-- <header class="bg-dark py-5">
+        <div class="container px-4 px-lg-5 my-5">
+            <div class="text-center text-white">
+                <h1 class="display-4 fw-bolder">Shop in style</h1>
+                <p class="lead fw-normal text-white-50 mb-0">With this shop hompeage template</p>
+            </div>
+        </div>
+    </header> --}}
+
+    <div>
         @yield('container')
     </div>
+
+
+
+
 
     <!-- Optional JavaScript; choose one of the two! -->
 

@@ -49,8 +49,10 @@
 </head>
 
 <body>
+    <!-- Sidebar -->
     <div class="side-navbar active-nav d-flex justify-content-between flex-wrap flex-column" id="sidebar">
-        <nav class="nav flex-column text-white w-100">
+        <nav class="nav flex-column text-white w-100 align-items-center">
+            <!-- Tambahkan class align-items-center di sini -->
             <a href="#" class="nav-link h3 text-white my-2">ADMINISTRATOR</a>
             <a href="/admin" class="nav-link">
                 <span class="mx-2">Home</span>
@@ -62,10 +64,21 @@
                 <span class="mx-2">User</span>
             </a>
             <a href="/admin/coupon" class="nav-link">
-                <span class="mx-2">coupon</span>
+                <span class="mx-2">Coupon</span>
             </a>
+            <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                @csrf
+
+                <!-- Grid System: Center Logout Button -->
+                <div class="d-flex justify-content-center">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm align-content-center">
+                        {{ __('Log Out') }}
+                    </button>
+                </div>
+            </form>
         </nav>
     </div>
+
     <div class="p-1 my-container active-cont">
         <div class="container mt-4">
             <!-- Your content goes here -->

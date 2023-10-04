@@ -183,7 +183,7 @@ class ProdukController extends Controller
             return response()->json(['produk' => $dataProduk]);
         }
 
-        return view('user.gues')->with([
+        return view('dashboard')->with([
             'produk' => $dataProduk,
             'title' => 'gues'
         ]);
